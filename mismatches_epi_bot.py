@@ -91,6 +91,8 @@ for row in range(nb_patient):
     #deal with the cookie banner (it's a pain)
     erase_cook= driver.find_element(By.CLASS_NAME, "cc-dismiss")
     erase_cook.click()
+    time.sleep(1)
+
     
     #click on the "result" button
     search_button=driver.find_element(By.XPATH, "//button[text()='Calculate']")
@@ -122,12 +124,7 @@ for row in range(nb_patient):
                     
                     #now, we can get the different mismatches 
                     data = json.loads(text)
-    
-                    print("JSON reçu :")
-                    print(json.dumps(data, indent=4))
-    
-                    print("Quantité ABC:", data["ABC"]["quantity"])
-                    print("Détails ALL:", data["ALL"]["details"][:5])
+
                     
                     new_line = {"MM_class_I":data["ABC"]["quantity"] , "MM_class_II":data["DQ"]["quantity"] + data["DRB"]["quantity"]  }
                     table = pd.concat([table, pd.DataFrame([new_line])])
@@ -138,7 +135,7 @@ for row in range(nb_patient):
     
     #its could be better honestly, but that work! (pb= RAM)
     driver.quit()
-    time.sleep(3)
+    time.sleep(5)
     driver = webdriver.Chrome(options=options)
     #ouverture du site
     driver.get(url)
