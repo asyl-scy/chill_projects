@@ -25,8 +25,28 @@ import json
 
 
 import time
+import sys
 
 
+def verif_file(donor_reciev):
+    file_bool=True
+
+    while file_bool :
+        name_file=input(f"what is the name of the {donor_reciev} dataset ? \n(type '-1' to exit) \n - ")
+        if name_file=="-1":
+            sys.exit()
+        
+        try:
+            pd.read_csv(name_file)
+        
+        except FileNotFoundError:
+            print("that file don't exist ! \n")
+        
+        else:
+            print("OK ! file found ! \n **************** ")
+            file_bool=False
+    
+    return pd.read_csv(name_file)
 
 #site
 url="https://www.epregistry.com.br/calculator"
@@ -40,12 +60,16 @@ driver = webdriver.Chrome(options=options)
 driver.get(url)
 
 
-name_donor=input("what is the name of the donor dataset ? \n - ")
-name_reciev=input("what is the name of the reciever dataset ? \n - ")
+#name_donor=input("what is the name of the donor dataset ? \n - ")
+#name_reciev=input("what is the name of the reciever dataset ? \n - ")
+
+
+
+    
 
 #lecture
-donor= pd.read_csv(name_donor)
-reciev=pd.read_csv(name_reciev)
+donor= verif_file("donor's")
+reciev=verif_file("reciever's")
 
 #replace _ by : (XX:XX)
 donor.replace(r'(\d{2})_(\d{2})', r'\1:\2', regex=True, inplace=True)
@@ -66,7 +90,7 @@ table=pd.DataFrame([{"MM_class_I": None, "MM_class_II": None}])
 
 
 for row in range(nb_patient):
-    print(f'-----{row}')
+    print(f' \n -----calculation ligne {row}')
     
     #---recup the alleles to writte them on the website
     input_donor=""
@@ -91,8 +115,6 @@ for row in range(nb_patient):
     #deal with the cookie banner (it's a pain)
     erase_cook= driver.find_element(By.CLASS_NAME, "cc-dismiss")
     erase_cook.click()
-    time.sleep(1)
-
     
     #click on the "result" button
     search_button=driver.find_element(By.XPATH, "//button[text()='Calculate']")
@@ -124,18 +146,23 @@ for row in range(nb_patient):
                     
                     #now, we can get the different mismatches 
                     data = json.loads(text)
-
+    
+                    print("JSON reçu :")
+                    print(json.dumps(data, indent=4))
+    
+                    print("Quantité ABC:", data["ABC"]["quantity"])
+                    print("Détails ALL:", data["ALL"]["details"][:5])
                     
                     new_line = {"MM_class_I":data["ABC"]["quantity"] , "MM_class_II":data["DQ"]["quantity"] + data["DRB"]["quantity"]  }
                     table = pd.concat([table, pd.DataFrame([new_line])])
                     
     
                 except Exception as e:
-                    print("Erreur lors de la décompression ou du parsing JSON :", e)
+                    print("Error during decompression or JSON parsing :", e)
     
     #its could be better honestly, but that work! (pb= RAM)
     driver.quit()
-    time.sleep(5)
+    time.sleep(3)
     driver = webdriver.Chrome(options=options)
     #ouverture du site
     driver.get(url)
